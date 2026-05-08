@@ -12,21 +12,27 @@ export default function Dashboard() {
     const cardsData = [
         {
             id: 1,
-            title: 'Meu Perfil',
+            title: 'Pikachu',
             imageSource: require('../../../assets/images/profile-icon.png'),
-            description: 'Pikachu',
+            description: 'Um Pokémon elétrico muito energético, capaz de armazenar eletricidade nas bochechas e liberar ataques poderosos',
         },
         {
             id: 2,
-            title: 'Configurações',
+            title: 'Bulbasaur',
             imageSource: require('../../../assets/images/settings-icon.png'),
-            description: 'Lero lero',
+            description: 'Um Pokémon do tipo Planta e Veneno que carrega uma semente nas costas desde o nascimento, a qual cresce junto com ele',
         },
         {
             id: 3,
-            title: 'Notificações',
+            title: 'Squirtle',
             imageSource: require('../../../assets/images/notification-icon.png'),
-            description: 'Liru Liru',
+            description: 'Um Pokémon tartaruga do tipo Água. Pequeno, ágil e conhecido por lançar jatos d’água poderosos.',
+        },
+        {
+            id: 4,
+            title: 'Raichu',
+            imageSource: require('../../../assets/images/raichu.png'),
+            description: 'Um Pokémon elétrico rápido e poderoso, capaz de liberar fortes descargas de energia pelos ataques..',
         },
     ];
 
@@ -51,7 +57,7 @@ export default function Dashboard() {
                     ))}
                 </View>
 
-                <Button title="Sair da APP" onPress={signOut} />
+                <Button title="Sair" onPress={signOut} />
             </View>
         </ScrollView>
     );

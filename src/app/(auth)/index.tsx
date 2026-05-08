@@ -43,12 +43,12 @@ export default function Index() {
         <View style={styles.container}>
             <Card>
                 <Image 
-                    source={require('../../../assets/images/cat-icon.png')} 
-                    style={{ width: 200, height: 200 }}
+                    source={require('../../../assets/images/log-in.png')} 
+                    style={{ width: 120, alignSelf: 'center', height: 120 }}
                 />
 
                 <Input 
-                    placeholder="Usuario" 
+                    placeholder="Usuário" 
                     onChangeText={setName} 
                 />
 
