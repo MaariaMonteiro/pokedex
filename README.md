@@ -16,6 +16,3 @@ npx expo start
 - *Meu Time* — escolher até 5 Pokémons pro time, com opção de trocar
 - *Perfil* — mostra vitórias e derrotas do jogador
 
-## Observação
-
-A senha do cadastro precisa ter letra maiúscula, número e símbolo (ex: Senha@123).
