@@ -21,15 +21,16 @@ export const updateProfile = (userId: string, data: { level: string; vitorias: s
 export const getTeam = (userId: string) =>
   
   api.get('/pokemon/v1/team', { params: { 'user-id': userId } });
-
+  
 export const updateTeam = (userId: string, removedPokemon: number, newPokemon: number) =>
-  api.put('/pokemon/v1/team', 
-    { removedPokemon, newPokemon },
-    {
-      params: { 'user-id': userId },
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
+  api.put('/pokemon/v1/team', {
+    removedPokemon,
+    newPokemon,
+  }, {
+    params: {
+      'user-id': userId,
+    },
+  });
 
 export const addCaptured = (userId: string, pokemonId: number) =>
   api.put('/pokemon/v1/captured', null, {

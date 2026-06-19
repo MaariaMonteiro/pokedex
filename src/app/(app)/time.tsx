@@ -6,7 +6,6 @@ import { Button } from '@/components/button';
 import { useAuth } from '@/context/AuthContext';
 import { Pokemon } from '../../@types/pokemon';
 import { TYPE_MAP } from '@/constants/pokemon';
-import { addCaptured, updateTeam } from '@/services/pokemonApi';
 import { getTeam } from '@/services/pokemonApi';
 import { Menu } from '@/components/menu/menu';
 
@@ -43,8 +42,6 @@ export default function Time() {
     const [loading, setLoading] = useState(true);
     const [time, setTime] = useState<Pokemon[]>([]);
     const [escolha, setEscolha] = useState<Pokemon[]>([]);
-    const [capturados, setCapturados] = useState<Set<string>>(new Set());
-    const [capturing, setCapturing] = useState<string | null>(null);
     const [swapping, setSwapping] = useState<string | null>(null);
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -59,15 +56,11 @@ export default function Time() {
                     getTeam(userId),
                 ]);
 
-                const { team = [], capture = [] } = teamResponse.data;
+                const { team = [] } = teamResponse.data;
                 const teamPokemons: Pokemon[] = team.map(mapApiPokemon);
                 const teamIndexes = new Set(teamPokemons.map((p) => p.index));
-                const captureIndexes = new Set<string>(
-                    capture.map((p: any) => String(p.index).padStart(3, '0'))
-                );
 
                 setTime(teamPokemons);
-                setCapturados(captureIndexes);
                 setEscolha(allPokemons.filter((p) => !teamIndexes.has(p.index)));
             } catch (e) {
                 console.error('Erro ao carregar dados:', e);
@@ -78,63 +71,33 @@ export default function Time() {
         loadData();
     }, [userId]);
 
-    async function capturar(pokemon: Pokemon) {
-        if (!userId || time.length >= 5) return;
-        setCapturing(pokemon.index);
-        try {
-            await addCaptured(userId, Number(pokemon.index));
-            setTime((prev) => [...prev, pokemon]);
-            setEscolha((prev) => prev.filter((p) => p.index !== pokemon.index));
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setCapturing(null);
-        }
-    }
-
     function abrirModalTroca(pokemon: Pokemon) {
         setPokemonParaTrocar(pokemon);
         setModalVisible(true);
     }
 
+    // NOTA: a troca é feita apenas localmente (no estado do app).
+    // O endpoint PUT /pokemon/v1/team da API retorna erro 404/500
+    // de forma inconsistente entre contas, mesmo com payload correto
+    // (testado e confirmado — reportado ao professor).
     async function confirmarTroca(novoPokemon: Pokemon) {
-        if (!userId || !pokemonParaTrocar) return;
+        if (!pokemonParaTrocar) return;
+
         setSwapping(pokemonParaTrocar.index);
         setModalVisible(false);
-        try {
-            try {
-                await addCaptured(userId, Number(novoPokemon.index));
-            } catch (e) {
-                // ignora erro de já capturado
-            }
 
-            await updateTeam(
-                userId,
-                Number(pokemonParaTrocar.index),
-                Number(novoPokemon.index)
-            );
+        setTime((prev) =>
+            prev.map((p) =>
+                p.index === pokemonParaTrocar.index ? novoPokemon : p
+            )
+        );
+        setEscolha((prev) => [
+            ...prev.filter((p) => p.index !== novoPokemon.index),
+            pokemonParaTrocar,
+        ]);
 
-            setTime((prev) =>
-                prev.map((p) =>
-                    p.index === pokemonParaTrocar.index ? novoPokemon : p
-                )
-            );
-            setEscolha((prev) => [
-                ...prev.filter((p) => p.index !== novoPokemon.index),
-                pokemonParaTrocar,
-            ]);
-            setCapturados((prev) => {
-                const next = new Set(prev);
-                next.add(novoPokemon.index);
-                next.delete(pokemonParaTrocar.index);
-                return next;
-            });
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setSwapping(null);
-            setPokemonParaTrocar(null);
-        }
+        setSwapping(null);
+        setPokemonParaTrocar(null);
     }
 
     const listData: ListItem[] = [
@@ -219,25 +182,6 @@ export default function Time() {
                                             </Text>
                                         </TouchableOpacity>
                                     )}
-
-                                    {item.secao === 'escolha' && (
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.btnCapturar,
-                                                time.length >= 5 && styles.btnDesabilitado,
-                                            ]}
-                                            onPress={() => capturar(item)}
-                                            disabled={capturing === item.index || time.length >= 5}
-                                        >
-                                            <Text style={styles.btnCapturarText}>
-                                                {capturing === item.index
-                                                    ? 'Capturando...'
-                                                    : time.length >= 5
-                                                    ? 'Time cheio'
-                                                    : '+ Capturar'}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    )}
                                 </View>
                             </View>
                         );
@@ -261,37 +205,30 @@ export default function Time() {
                             data={escolha}
                             keyExtractor={(p) => p.index}
                             style={styles.modalList}
-                            renderItem={({ item }) => {
-                                const jaCapturado = capturados.has(item.index);
-                                return (
-                                    <TouchableOpacity
-                                        style={[styles.modalItem, jaCapturado && { opacity: 0.4 }]}
-                                        onPress={() => !jaCapturado && confirmarTroca(item)}
-                                        disabled={jaCapturado}
-                                    >
-                                        <Image
-                                            source={{ uri: item.imagem }}
-                                            style={styles.modalImage}
-                                            resizeMode="contain"
-                                        />
-                                        <View>
-                                            <Text style={styles.modalPokeName}>{item.nome}</Text>
-                                            {jaCapturado && (
-                                                <Text style={{ fontSize: 10, color: '#999' }}>Já capturado</Text>
-                                            )}
-                                            <View style={styles.typesRow}>
-                                                {item.tipos.map((t) => (
-                                                    <View key={t} style={styles.typeBadge}>
-                                                        <Text style={styles.typeBadgeText}>
-                                                            {(TYPE_MAP[t] ?? t).toUpperCase()}
-                                                        </Text>
-                                                    </View>
-                                                ))}
-                                            </View>
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={styles.modalItem}
+                                    onPress={() => confirmarTroca(item)}
+                                >
+                                    <Image
+                                        source={{ uri: item.imagem }}
+                                        style={styles.modalImage}
+                                        resizeMode="contain"
+                                    />
+                                    <View>
+                                        <Text style={styles.modalPokeName}>{item.nome}</Text>
+                                        <View style={styles.typesRow}>
+                                            {item.tipos.map((t) => (
+                                                <View key={t} style={styles.typeBadge}>
+                                                    <Text style={styles.typeBadgeText}>
+                                                        {(TYPE_MAP[t] ?? t).toUpperCase()}
+                                                    </Text>
+                                                </View>
+                                            ))}
                                         </View>
-                                    </TouchableOpacity>
-                                );
-                            }}
+                                    </View>
+                                </TouchableOpacity>
+                            )}
                         />
 
                         <TouchableOpacity
@@ -350,15 +287,6 @@ const styles = StyleSheet.create({
     statBarBg: { flex: 1, height: 4, backgroundColor: '#eee', borderRadius: 2, overflow: 'hidden' },
     statBarFill: { height: '100%', backgroundColor: '#e11083', borderRadius: 2 },
     statValue: { fontSize: 9, fontWeight: '800', color: '#333', width: 24, textAlign: 'right' },
-    btnCapturar: {
-        marginTop: 6,
-        backgroundColor: '#9b10e1',
-        borderRadius: 8,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        alignSelf: 'flex-start',
-    },
-    btnCapturarText: { color: '#fff', fontSize: 11, fontWeight: '800' },
     btnTrocar: {
         marginTop: 6,
         backgroundColor: '#e17810',
@@ -368,7 +296,6 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     btnTrocarText: { color: '#fff', fontSize: 11, fontWeight: '800' },
-    btnDesabilitado: { backgroundColor: '#aaa' },
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',

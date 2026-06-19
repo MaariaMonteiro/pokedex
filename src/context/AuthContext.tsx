@@ -33,11 +33,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         loadStorageData();
     }, []);
 
-    async function signIn(username: string, password: string): Promise<boolean> {
-        try {
-            const response = await loginApi(username, password);
-            // Ajuste os campos abaixo conforme o retorno real da API
-            const { userId: id, username: name } = response.data;
+async function signIn(username: string, password: string): Promise<boolean> {
+    try {
+        const response = await loginApi(username, password);
+        console.log('LOGIN RESPONSE:', JSON.stringify(response.data));
+        
+        const { userId: id, username: name } = response.data;
 
             setUser(name ?? username);
             setUserId(id);

@@ -9,7 +9,6 @@ import { TYPE_MAP } from '@/constants/pokemon'; // mapa de tradução dos tipos 
 import profile from '@/app/(app)/profile';
 import { Menu } from '@/components/menu/menu';
 
-// tradução dos nomes dos stats de inglês pra português
 const STAT_PT: Record<string, string> = {
     hp: 'Vida',
     attack: 'Ataque',
