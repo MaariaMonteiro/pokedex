@@ -8,6 +8,7 @@ import { Pokemon } from '../../@types/pokemon';
 import { TYPE_MAP } from '@/constants/pokemon';
 import { addCaptured, updateTeam } from '@/services/pokemonApi';
 import { getTeam } from '@/services/pokemonApi';
+import { Menu } from '@/components/menu/menu';
 
 const STAT_PT: Record<string, string> = {
     hp: 'Vida',
@@ -131,16 +132,13 @@ console.log('TEAM:', JSON.stringify(teamResponse.data.team));
             .map((p) => ({ ...p, type: 'poke' as const, secao: 'escolha' as const })),
     ];
 
+
     return (
         <View style={styles.container}>
 
-            <View style={styles.header}>
-                <Text style={styles.welcomeText}>Veja seu time, {user}</Text>
-                <View style={styles.headerButtons}>
-                    <Link href="/dashboard" asChild>
-                        <Button title="Dashboard" />
-                    </Link>
-                </View>
+             <View style={styles.header}>
+                <Text style={styles.welcomeText}>Veja seu time, {user}!</Text>
+                <Menu />
             </View>
 
             {loading ? (

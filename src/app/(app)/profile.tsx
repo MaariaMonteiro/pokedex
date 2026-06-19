@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { Button } from '@/components/button';
 import { useEffect, useState } from 'react';
 import { getProfile } from '@/services/pokemonApi';
+import { Menu } from '@/components/menu/menu';
 
 export default function Profile() {
     const { user, userId } = useAuth();
@@ -32,14 +33,11 @@ export default function Profile() {
 
     return (
         <View style={styles.wrapper}>    
-    <View style={styles.header}>
-        <View style={styles.headerButtons}>
-            <Link href="/dashboard" asChild>
-                <Button title="Dashboard" />
-            </Link>
-            
-        </View>
-    </View>
+                {/* cabeçalho */}
+               <View style={styles.header}>
+                <Menu />
+            </View>
+   
 
     <View style={styles.container}>
 
@@ -131,21 +129,20 @@ const styles = StyleSheet.create({
         borderColor: '#9b10e1',
     },
 
-wrapper: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-},
-header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: 20,
-    paddingTop: 40,
-},
-headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-},
-
+    wrapper: {
+        flex: 1,
+        backgroundColor: '#f5f5f5',
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        padding: 20,
+        paddingTop: 40,
+    },
+    headerButtons: {
+        flexDirection: 'row',
+        gap: 8,
+    },
     username: {
         fontSize: 28,
         fontWeight: '900',

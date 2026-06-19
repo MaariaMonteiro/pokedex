@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext'; // pega o usuário logado e fun
 import { Pokemon } from '../../@types/pokemon'; // tipo que define como um pokémon é
 import { TYPE_MAP } from '@/constants/pokemon'; // mapa de tradução dos tipos (fire → fogo)
 import profile from '@/app/(app)/profile';
+import { Menu } from '@/components/menu/menu';
 
 // tradução dos nomes dos stats de inglês pra português
 const STAT_PT: Record<string, string> = {
@@ -48,25 +49,13 @@ export default function Dashboard() {
 
     return (
         <View style={styles.container}>
-
-            {/* cabeçalho com nome do usuário e botão sair */}
-          <View style={styles.header}>
-    <Text style={styles.welcomeText}>Bem-vindo, {user} </Text>
-
-
-    <View style={styles.headerButtons}>
-        <Link href="/profile" asChild>
-            <Button title="Perfil" />
-
-        </Link>
-        <Link href="/time" asChild>
-                <Button title="Time" />
-            </Link>
-        <Button title="Sair" onPress={signOut} />
-    </View>
-
-</View>
-
+        
+         {/* cabeçalho */}
+            <View style={styles.header}>
+                <Text style={styles.welcomeText}>Bem-vindo, {user}!</Text>
+                <Menu />
+            </View>
+            
             {/* se tiver carregando mostra um spinner, senão mostra a lista */}
             {loading ? (
                 <ActivityIndicator size="large" color="#E15610" style={{ marginTop: 40 }} />
