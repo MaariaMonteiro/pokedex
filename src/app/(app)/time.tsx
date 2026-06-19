@@ -43,10 +43,10 @@ export default function Time() {
     const [loading, setLoading] = useState(true);
     const [time, setTime] = useState<Pokemon[]>([]);
     const [escolha, setEscolha] = useState<Pokemon[]>([]);
+    const [capturados, setCapturados] = useState<Set<string>>(new Set());
     const [capturing, setCapturing] = useState<string | null>(null);
     const [swapping, setSwapping] = useState<string | null>(null);
 
-    // modal de troca
     const [modalVisible, setModalVisible] = useState(false);
     const [pokemonParaTrocar, setPokemonParaTrocar] = useState<Pokemon | null>(null);
 
@@ -54,18 +54,20 @@ export default function Time() {
         async function loadData() {
             if (!userId) return;
             try {
-               
-const [allPokemons, teamResponse] = await Promise.all([
-    getPokemons(30),
-    getTeam(userId),
-]);
+                const [allPokemons, teamResponse] = await Promise.all([
+                    getPokemons(30),
+                    getTeam(userId),
+                ]);
 
-console.log('TEAM:', JSON.stringify(teamResponse.data.team));
-                const { team = [] } = teamResponse.data;
+                const { team = [], capture = [] } = teamResponse.data;
                 const teamPokemons: Pokemon[] = team.map(mapApiPokemon);
                 const teamIndexes = new Set(teamPokemons.map((p) => p.index));
+                const captureIndexes = new Set<string>(
+                    capture.map((p: any) => String(p.index).padStart(3, '0'))
+                );
 
                 setTime(teamPokemons);
+                setCapturados(captureIndexes);
                 setEscolha(allPokemons.filter((p) => !teamIndexes.has(p.index)));
             } catch (e) {
                 console.error('Erro ao carregar dados:', e);
@@ -100,6 +102,12 @@ console.log('TEAM:', JSON.stringify(teamResponse.data.team));
         setSwapping(pokemonParaTrocar.index);
         setModalVisible(false);
         try {
+            try {
+                await addCaptured(userId, Number(novoPokemon.index));
+            } catch (e) {
+                // ignora erro de já capturado
+            }
+
             await updateTeam(
                 userId,
                 Number(pokemonParaTrocar.index),
@@ -115,6 +123,12 @@ console.log('TEAM:', JSON.stringify(teamResponse.data.team));
                 ...prev.filter((p) => p.index !== novoPokemon.index),
                 pokemonParaTrocar,
             ]);
+            setCapturados((prev) => {
+                const next = new Set(prev);
+                next.add(novoPokemon.index);
+                next.delete(pokemonParaTrocar.index);
+                return next;
+            });
         } catch (e) {
             console.error(e);
         } finally {
@@ -132,11 +146,9 @@ console.log('TEAM:', JSON.stringify(teamResponse.data.team));
             .map((p) => ({ ...p, type: 'poke' as const, secao: 'escolha' as const })),
     ];
 
-
     return (
         <View style={styles.container}>
-
-             <View style={styles.header}>
+            <View style={styles.header}>
                 <Text style={styles.welcomeText}>Veja seu time, {user}!</Text>
                 <Menu />
             </View>
@@ -233,7 +245,6 @@ console.log('TEAM:', JSON.stringify(teamResponse.data.team));
                 />
             )}
 
-            {/* Modal de troca */}
             <Modal
                 visible={modalVisible}
                 transparent
@@ -250,30 +261,37 @@ console.log('TEAM:', JSON.stringify(teamResponse.data.team));
                             data={escolha}
                             keyExtractor={(p) => p.index}
                             style={styles.modalList}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={styles.modalItem}
-                                    onPress={() => confirmarTroca(item)}
-                                >
-                                    <Image
-                                        source={{ uri: item.imagem }}
-                                        style={styles.modalImage}
-                                        resizeMode="contain"
-                                    />
-                                    <View>
-                                        <Text style={styles.modalPokeName}>{item.nome}</Text>
-                                        <View style={styles.typesRow}>
-                                            {item.tipos.map((t) => (
-                                                <View key={t} style={styles.typeBadge}>
-                                                    <Text style={styles.typeBadgeText}>
-                                                        {(TYPE_MAP[t] ?? t).toUpperCase()}
-                                                    </Text>
-                                                </View>
-                                            ))}
+                            renderItem={({ item }) => {
+                                const jaCapturado = capturados.has(item.index);
+                                return (
+                                    <TouchableOpacity
+                                        style={[styles.modalItem, jaCapturado && { opacity: 0.4 }]}
+                                        onPress={() => !jaCapturado && confirmarTroca(item)}
+                                        disabled={jaCapturado}
+                                    >
+                                        <Image
+                                            source={{ uri: item.imagem }}
+                                            style={styles.modalImage}
+                                            resizeMode="contain"
+                                        />
+                                        <View>
+                                            <Text style={styles.modalPokeName}>{item.nome}</Text>
+                                            {jaCapturado && (
+                                                <Text style={{ fontSize: 10, color: '#999' }}>Já capturado</Text>
+                                            )}
+                                            <View style={styles.typesRow}>
+                                                {item.tipos.map((t) => (
+                                                    <View key={t} style={styles.typeBadge}>
+                                                        <Text style={styles.typeBadgeText}>
+                                                            {(TYPE_MAP[t] ?? t).toUpperCase()}
+                                                        </Text>
+                                                    </View>
+                                                ))}
+                                            </View>
                                         </View>
-                                    </View>
-                                </TouchableOpacity>
-                            )}
+                                    </TouchableOpacity>
+                                );
+                            }}
                         />
 
                         <TouchableOpacity
@@ -291,12 +309,12 @@ console.log('TEAM:', JSON.stringify(teamResponse.data.team));
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f5f5f5' },
-header: {
-    flexDirection: 'column',
-    padding: 16,
-    paddingTop: 40,
-    gap: 8,
-},
+    header: {
+        flexDirection: 'column',
+        padding: 16,
+        paddingTop: 40,
+        gap: 8,
+    },
     headerButtons: { flexDirection: 'row', gap: 8 },
     welcomeText: { color: '#333', fontSize: 18, fontWeight: 'bold' },
     listContent: { padding: 16, gap: 12 },
@@ -351,8 +369,6 @@ header: {
     },
     btnTrocarText: { color: '#fff', fontSize: 11, fontWeight: '800' },
     btnDesabilitado: { backgroundColor: '#aaa' },
-
-    // modal
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',

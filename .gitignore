@@ -6,6 +6,7 @@
 # dependencies
 node_modules/
 
+git 
 # Expo
 .expo/
 dist/
