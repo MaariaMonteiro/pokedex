@@ -10,19 +10,19 @@ export const getPokemons = async (limit = 151): Promise<Pokemon[]> => {
   const list = response.data.results;
 
   const detailedList = await Promise.all(
-    list.map(async (pokemon: { url: string }) => {
+      list.map(async (pokemon: { url: string }) => {
       const detailRes = await axios.get(pokemon.url);
       const data = detailRes.data;
 
-      return {
+  return {
         nome: data.name,
-  Cor: data.types[0].type.name,
-index: data.id.toString().padStart(3, '0'),
+        Cor: data.types[0].type.name,
+        index: data.id.toString().padStart(3, '0'),
         tipos: data.types.map((t: any) => t.type.name),
         imagem: data.sprites.front_default,
-      poder: data.stats.map((s: any) => ({
-  nome: s.stat.name,
-  forca: s.base_stat,
+        poder: data.stats.map((s: any) => ({
+        nome: s.stat.name,
+        forca: s.base_stat,
 })),
       };
     })

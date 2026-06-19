@@ -55,24 +55,26 @@ export default function Time() {
             if (!userId) return;
             try {
                
-const [allPokemons, teamResponse] = await Promise.all([
-    getPokemons(30),
-    getTeam(userId),
-]);
+    const [allPokemons, teamResponse] = await Promise.all([
+        getPokemons(30),
+        getTeam(userId),
+    ]);
+        console.log(JSON.stringify(teamResponse.data, null, 2));
+        console.log('TEAM:', JSON.stringify(teamResponse.data.team));
+        console.log('TEAM RESPONSE', teamResponse.data);
 
-console.log('TEAM:', JSON.stringify(teamResponse.data.team));
-                const { team = [] } = teamResponse.data;
-                const teamPokemons: Pokemon[] = team.map(mapApiPokemon);
-                const teamIndexes = new Set(teamPokemons.map((p) => p.index));
+        const { team = [] } = teamResponse.data;
+        const teamPokemons: Pokemon[] = team.map(mapApiPokemon);
+        const teamIndexes = new Set(teamPokemons.map((p) => p.index));
 
-                setTime(teamPokemons);
-                setEscolha(allPokemons.filter((p) => !teamIndexes.has(p.index)));
-            } catch (e) {
+        setTime(teamPokemons);
+        setEscolha(allPokemons.filter((p) => !teamIndexes.has(p.index)));
+    } catch (e) {
                 console.error('Erro ao carregar dados:', e);
-            } finally {
-                setLoading(false);
-            }
+        } finally {
+            setLoading(false);
         }
+            }
         loadData();
     }, [userId]);
 
@@ -100,6 +102,10 @@ console.log('TEAM:', JSON.stringify(teamResponse.data.team));
         setSwapping(pokemonParaTrocar.index);
         setModalVisible(false);
         try {
+           console.log("BODY ENVIADO", {
+    removedPokemon: Number(pokemonParaTrocar.index),
+    newPokemon: Number(novoPokemon.index),
+});
             await updateTeam(
                 userId,
                 Number(pokemonParaTrocar.index),
